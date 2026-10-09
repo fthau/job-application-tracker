@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Job Tracker{% endblock %} · Job Application Tracker</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  {% set nav = [
+      ('dashboard', 'Dashboard', ['dashboard']),
+      ('companies', 'Companies', ['companies', 'company_detail', 'company_new', 'company_edit']),
+      ('jobs', 'Jobs', ['jobs', 'job_detail', 'job_new', 'job_edit']),
+      ('applications', 'Applications', ['applications', 'application_detail', 'application_new', 'application_edit']),
+      ('contacts', 'Contacts', ['contacts', 'contact_detail', 'contact_new', 'contact_edit']),
+      ('job_match', 'Job Match', ['job_match']),
+  ] %}
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('dashboard') }}">
+        <span class="brand-mark">JT</span> Job Tracker
+      </a>
+      <nav class="nav">
+        {% for endpoint, label, active_for in nav %}
+          <a href="{{ url_for(endpoint) }}"
+             class="{{ 'active' if request.endpoint in active_for else '' }}">{{ label }}</a>
+        {% endfor %}
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for category, message in messages %}
+        <div class="flash flash-{{ category }}">{{ message }}</div>
+      {% endfor %}
+    {% endwith %}
+
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="footer">Job Application Tracker · Flask + MySQL</footer>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

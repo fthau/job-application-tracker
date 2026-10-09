@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import delete_button %}
+{% block title %}Companies{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Companies</h1>
+    <p class="muted">{{ companies|length }} compan{{ 'y' if companies|length == 1 else 'ies' }}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('company_new') }}">+ Add company</a>
+</div>
+
+<form class="toolbar" method="get">
+  <input type="search" name="q" value="{{ search }}" placeholder="Search name, industry, city, state…">
+  <button class="btn" type="submit">Search</button>
+  {% if search %}<a class="btn btn-ghost" href="{{ url_for('companies') }}">Clear</a>{% endif %}
+</form>
+
+<div class="card table-wrap">
+  {% if companies %}
+  <table class="table">
+    <thead>
+      <tr><th>Company</th><th>Industry</th><th>Location</th><th class="num">Jobs</th><th class="num">Contacts</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for c in companies %}
+      <tr>
+        <td>
+          <a href="{{ url_for('company_detail', company_id=c.company_id) }}"><strong>{{ c.company_name }}</strong></a>
+          {% if c.website %}<br><a class="small muted" href="{{ c.website }}" target="_blank" rel="noopener">{{ c.website }}</a>{% endif %}
+        </td>
+        <td>{{ c.industry or '—' }}</td>
+        <td>{{ [c.city, c.state]|select|join(', ') or '—' }}</td>
+        <td class="num">{{ c.job_count }}</td>
+        <td class="num">{{ c.contact_count }}</td>
+        <td class="row-actions">
+          <a class="btn btn-sm" href="{{ url_for('company_edit', company_id=c.company_id) }}">Edit</a>
+          {{ delete_button(url_for('company_delete', company_id=c.company_id),
+               'Delete ' ~ c.company_name ~ '? This also deletes its ' ~ c.job_count ~ ' job(s) and their applications. Contacts will be kept but unlinked.',
+               small=True) }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="empty">No companies found. <a href="{{ url_for('company_new') }}">Add your first company</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

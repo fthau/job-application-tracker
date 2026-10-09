@@ -1,0 +1,30 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import text_input, field_error %}
+{% block title %}{{ 'Edit company' if company else 'Add company' }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('companies') }}">Companies</a> / {{ 'Edit ' ~ company.company_name if company else 'New' }}</p>
+<h1>{{ 'Edit company' if company else 'Add company' }}</h1>
+
+{% if errors %}<div class="flash flash-error">Please fix the highlighted fields.</div>{% endif %}
+
+<form method="post" class="card form">
+  {{ text_input('company_name', 'Company name', values, errors, required=True, maxlength=100) }}
+  <div class="form-row">
+    {{ text_input('industry', 'Industry', values, errors, maxlength=50, placeholder='e.g. Healthcare') }}
+    {{ text_input('website', 'Website', values, errors, type='url', maxlength=200, placeholder='https://') }}
+  </div>
+  <div class="form-row">
+    {{ text_input('city', 'City', values, errors, maxlength=50) }}
+    {{ text_input('state', 'State', values, errors, maxlength=50) }}
+  </div>
+  <div class="field {{ 'has-error' if errors.get('notes') }}">
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="4">{{ values.get('notes') or '' }}</textarea>
+    {{ field_error(errors, 'notes') }}
+  </div>
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Save changes' if company else 'Add company' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('company_detail', company_id=company.company_id) if company else url_for('companies') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

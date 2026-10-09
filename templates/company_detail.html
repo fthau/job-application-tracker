@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import delete_button, skill_chips %}
+{% block title %}{{ company.company_name }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('companies') }}">Companies</a> / {{ company.company_name }}</p>
+<div class="page-head">
+  <div>
+    <h1>{{ company.company_name }}</h1>
+    <p class="muted">{{ company.industry or 'Industry not set' }}{% if company.city or company.state %} · {{ [company.city, company.state]|select|join(', ') }}{% endif %}</p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('company_edit', company_id=company.company_id) }}">Edit</a>
+    {{ delete_button(url_for('company_delete', company_id=company.company_id),
+         'Delete ' ~ company.company_name ~ '? This also deletes its ' ~ jobs|length ~ ' job(s) and their applications. Contacts will be kept but unlinked.') }}
+  </div>
+</div>
+
+<section class="card">
+  <dl class="details">
+    <dt>Website</dt><dd>{% if company.website %}<a href="{{ company.website }}" target="_blank" rel="noopener">{{ company.website }}</a>{% else %}—{% endif %}</dd>
+    <dt>Notes</dt><dd class="pre">{{ company.notes or '—' }}</dd>
+  </dl>
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Jobs ({{ jobs|length }})</h2>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('job_new', company_id=company.company_id) }}">+ Add job</a>
+  </div>
+  {% if jobs %}
+  <table class="table">
+    <thead><tr><th>Title</th><th>Type</th><th>Salary</th><th>Skills</th><th class="num">Apps</th></tr></thead>
+    <tbody>
+      {% for j in jobs %}
+      <tr>
+        <td><a href="{{ url_for('job_detail', job_id=j.job_id) }}">{{ j.job_title }}</a></td>
+        <td>{{ j.job_type }}</td>
+        <td class="nowrap">{{ j|salary_range }}</td>
+        <td>{{ skill_chips(j.requirements) }}</td>
+        <td class="num">{{ j.application_count }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty">No jobs at this company yet.</p>{% endif %}
+</section>
+
+<section class="card">
+  <div class="card-head">
+    <h2>Contacts ({{ contacts|length }})</h2>
+    <a class="btn btn-sm btn-primary" href="{{ url_for('contact_new', company_id=company.company_id) }}">+ Add contact</a>
+  </div>
+  {% if contacts %}
+  <table class="table">
+    <thead><tr><th>Name</th><th>Title</th><th>Email</th><th>Phone</th></tr></thead>
+    <tbody>
+      {% for ct in contacts %}
+      <tr>
+        <td><a href="{{ url_for('contact_detail', contact_id=ct.contact_id) }}">{{ ct.contact_name }}</a></td>
+        <td>{{ ct.title or '—' }}</td>
+        <td>{% if ct.email %}<a href="mailto:{{ ct.email }}">{{ ct.email }}</a>{% else %}—{% endif %}</td>
+        <td class="nowrap">{{ ct.phone or '—' }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty">No contacts at this company yet.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,33 @@
+{# Reusable pieces shared by several templates. #}
+
+{% macro status_badge(status) -%}
+  <span class="badge badge-{{ status|lower }}">{{ status }}</span>
+{%- endmacro %}
+
+{% macro field_error(errors, name) -%}
+  {% if errors.get(name) %}<p class="field-error">{{ errors[name] }}</p>{% endif %}
+{%- endmacro %}
+
+{% macro skill_chips(skills, css='') -%}
+  {% for s in skills %}<span class="chip {{ css }}">{{ s }}</span>{% else %}<span class="muted">None listed</span>{% endfor %}
+{%- endmacro %}
+
+{# POST form with a browser confirm() dialog before deleting. #}
+{% macro delete_button(action, message, label='Delete', small=False) -%}
+  <form method="post" action="{{ action }}" class="inline-form"
+        onsubmit="return confirm({{ message|tojson|forceescape }});">
+    <button type="submit" class="btn btn-danger {{ 'btn-sm' if small }}">{{ label }}</button>
+  </form>
+{%- endmacro %}
+
+{% macro text_input(name, label, values, errors, type='text', required=False, maxlength=None, placeholder='') -%}
+  <div class="field {{ 'has-error' if errors.get(name) }}">
+    <label for="{{ name }}">{{ label }}{% if required %} <span class="req">*</span>{% endif %}</label>
+    <input type="{{ type }}" id="{{ name }}" name="{{ name }}"
+           value="{{ values.get(name) if values.get(name) is not none else '' }}"
+           {% if required %}required{% endif %}
+           {% if maxlength %}maxlength="{{ maxlength }}"{% endif %}
+           {% if placeholder %}placeholder="{{ placeholder }}"{% endif %}>
+    {{ field_error(errors, name) }}
+  </div>
+{%- endmacro %}
