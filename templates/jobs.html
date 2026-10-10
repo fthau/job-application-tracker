@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import delete_button, skill_chips %}
+{% block title %}Jobs{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Jobs</h1>
+    <p class="muted">{{ jobs|length }} job{{ '' if jobs|length == 1 else 's' }}</p>
+  </div>
+  <a class="btn btn-primary" href="{{ url_for('job_new') }}">+ Add job</a>
+</div>
+
+<form class="toolbar" method="get">
+  <input type="search" name="q" value="{{ search }}" placeholder="Search title or company…">
+  <select name="type" aria-label="Job type">
+    <option value="">All types</option>
+    {% for t in JOB_TYPES %}<option value="{{ t }}" {{ 'selected' if t == job_type }}>{{ t }}</option>{% endfor %}
+  </select>
+  <button class="btn" type="submit">Filter</button>
+  {% if search or job_type %}<a class="btn btn-ghost" href="{{ url_for('jobs') }}">Clear</a>{% endif %}
+</form>
+
+<div class="card table-wrap">
+  {% if jobs %}
+  <table class="table">
+    <thead>
+      <tr><th>Job</th><th>Type</th><th>Salary</th><th>Posted</th><th>Required skills</th><th class="num">Apps</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for j in jobs %}
+      <tr>
+        <td>
+          <a href="{{ url_for('job_detail', job_id=j.job_id) }}"><strong>{{ j.job_title }}</strong></a><br>
+          <a class="small muted" href="{{ url_for('company_detail', company_id=j.company_id) }}">{{ j.company_name }}</a>
+        </td>
+        <td class="nowrap">{{ j.job_type }}</td>
+        <td class="nowrap">{{ j|salary_range }}</td>
+        <td class="nowrap">{{ j.date_posted|nice_date or '—' }}</td>
+        <td>{{ skill_chips(j.requirements) }}</td>
+        <td class="num">{{ j.application_count }}</td>
+        <td class="row-actions">
+          <a class="btn btn-sm" href="{{ url_for('job_edit', job_id=j.job_id) }}">Edit</a>
+          {{ delete_button(url_for('job_delete', job_id=j.job_id),
+               'Delete ' ~ j.job_title ~ ' at ' ~ j.company_name ~ '? Its ' ~ j.application_count ~ ' application(s) will also be deleted.',
+               small=True) }}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+    <p class="empty">No jobs found. <a href="{{ url_for('job_new') }}">Add a job</a>.</p>
+  {% endif %}
+</div>
+{% endblock %}

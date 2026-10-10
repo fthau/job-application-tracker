@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import text_input, field_error %}
+{% block title %}{{ 'Edit job' if job else 'Add job' }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('jobs') }}">Jobs</a> / {{ 'Edit ' ~ job.job_title if job else 'New' }}</p>
+<h1>{{ 'Edit job' if job else 'Add job' }}</h1>
+
+{% if not companies %}
+  <div class="flash flash-error">You need at least one company first. <a href="{{ url_for('company_new') }}">Add a company</a>.</div>
+{% endif %}
+{% if errors %}<div class="flash flash-error">Please fix the highlighted fields.</div>{% endif %}
+
+<form method="post" class="card form">
+  <div class="form-row">
+    <div class="field {{ 'has-error' if errors.get('company_id') }}">
+      <label for="company_id">Company <span class="req">*</span></label>
+      <select id="company_id" name="company_id" required>
+        <option value="">— Select a company —</option>
+        {% for c in companies %}
+          <option value="{{ c.company_id }}" {{ 'selected' if values.get('company_id')|string == c.company_id|string }}>{{ c.company_name }}</option>
+        {% endfor %}
+      </select>
+      {{ field_error(errors, 'company_id') }}
+    </div>
+    {{ text_input('job_title', 'Job title', values, errors, required=True, maxlength=100) }}
+  </div>
+
+  <div class="form-row">
+    <div class="field {{ 'has-error' if errors.get('job_type') }}">
+      <label for="job_type">Job type <span class="req">*</span></label>
+      <select id="job_type" name="job_type">
+        {% for t in JOB_TYPES %}<option value="{{ t }}" {{ 'selected' if values.get('job_type') == t }}>{{ t }}</option>{% endfor %}
+      </select>
+      {{ field_error(errors, 'job_type') }}
+    </div>
+    {{ text_input('date_posted', 'Date posted', values, errors, type='date') }}
+  </div>
+
+  <div class="form-row">
+    {{ text_input('salary_min', 'Minimum salary ($/year)', values, errors, type='number', placeholder='e.g. 65000') }}
+    {{ text_input('salary_max', 'Maximum salary ($/year)', values, errors, type='number', placeholder='e.g. 80000') }}
+  </div>
+
+  {{ text_input('job_url', 'Job posting URL', values, errors, type='url', maxlength=300, placeholder='https://') }}
+
+  <div class="field {{ 'has-error' if errors.get('requirements') }}">
+    <label for="requirements">Required skills</label>
+    <input type="text" id="requirements" name="requirements" value="{{ values.get('requirements') or '' }}"
+           placeholder="Python, SQL, Flask">
+    <p class="hint">Separate skills with commas. Stored as a JSON array and used by Job Match.</p>
+    {{ field_error(errors, 'requirements') }}
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Save changes' if job else 'Add job' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('job_detail', job_id=job.job_id) if job else url_for('jobs') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}

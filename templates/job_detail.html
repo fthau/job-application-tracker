@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import delete_button, skill_chips, status_badge %}
+{% block title %}{{ job.job_title }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('jobs') }}">Jobs</a> / {{ job.job_title }}</p>
+<div class="page-head">
+  <div>
+    <h1>{{ job.job_title }}</h1>
+    <p class="muted">
+      <a href="{{ url_for('company_detail', company_id=job.company_id) }}">{{ job.company_name }}</a>
+      · {{ job.job_type }}
+    </p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('application_new', job_id=job.job_id) }}">+ Log application</a>
+    <a class="btn" href="{{ url_for('job_edit', job_id=job.job_id) }}">Edit</a>
+    {{ delete_button(url_for('job_delete', job_id=job.job_id),
+         'Delete ' ~ job.job_title ~ '? Its ' ~ applications|length ~ ' application(s) will also be deleted.') }}
+  </div>
+</div>
+
+<section class="card">
+  <dl class="details">
+    <dt>Salary</dt><dd>{{ job|salary_range }}</dd>
+    <dt>Date posted</dt><dd>{{ job.date_posted|nice_date or '—' }}</dd>
+    <dt>Posting</dt><dd>{% if job.job_url %}<a href="{{ job.job_url }}" target="_blank" rel="noopener">{{ job.job_url }}</a>{% else %}—{% endif %}</dd>
+    <dt>Required skills</dt><dd>{{ skill_chips(job.requirements) }}</dd>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>Applications ({{ applications|length }})</h2>
+  {% if applications %}
+  <table class="table">
+    <thead><tr><th>Applied</th><th>Status</th><th>Resume</th><th>Cover letter</th><th>Interviews</th></tr></thead>
+    <tbody>
+      {% for a in applications %}
+      <tr>
+        <td><a href="{{ url_for('application_detail', application_id=a.application_id) }}">{{ a.application_date|nice_date }}</a></td>
+        <td>{{ status_badge(a.status) }}</td>
+        <td>{{ a.resume_version or '—' }}</td>
+        <td>{{ 'Yes' if a.cover_letter_sent else 'No' }}</td>
+        <td>{{ a.rounds|length }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="empty">You haven't applied to this job yet.</p>{% endif %}
+</section>
+{% endblock %}
