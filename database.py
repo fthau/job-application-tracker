@@ -8,6 +8,7 @@ Every query uses parameterized placeholders (%s) to prevent SQL injection.
 import json
 import os
 from contextlib import contextmanager
+from typing import Any, cast
 
 import mysql.connector
 from dotenv import load_dotenv
@@ -55,16 +56,16 @@ def get_cursor(commit=False):
         conn.close()
 
 
-def query_all(sql, params=()):
+def query_all(sql, params=()) -> list[dict[str, Any]]:
     with get_cursor() as cur:
         cur.execute(sql, params)
-        return cur.fetchall()
+        return cast(list[dict[str, Any]], cur.fetchall())
 
 
-def query_one(sql, params=()):
+def query_one(sql, params=()) -> dict[str, Any] | None:
     with get_cursor() as cur:
         cur.execute(sql, params)
-        return cur.fetchone()
+        return cast(dict[str, Any] | None, cur.fetchone())
 
 
 def execute(sql, params=()):
