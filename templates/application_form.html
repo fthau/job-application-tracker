@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import text_input, field_error %}
+{% block title %}{{ 'Edit application' if app_row else 'Add application' }}{% endblock %}
+
+{% macro round_row(r={}) -%}
+  <div class="round-row">
+    <div class="field">
+      <label>Date</label>
+      <input type="date" name="round_date" value="{{ r.get('date', '') }}">
+    </div>
+    <div class="field">
+      <label>Type</label>
+      <select name="round_type">
+        <option value="">—</option>
+        {% for t in INTERVIEW_TYPES %}<option value="{{ t }}" {{ 'selected' if r.get('type') == t }}>{{ t }}</option>{% endfor %}
+      </select>
+    </div>
+    <div class="field">
+      <label>Interviewer</label>
+      <input type="text" name="round_interviewer" maxlength="100" value="{{ r.get('interviewer', '') }}">
+    </div>
+    <div class="field grow">
+      <label>Notes</label>
+      <input type="text" name="round_notes" maxlength="1000" value="{{ r.get('notes', '') }}">
+    </div>
+    <button type="button" class="btn btn-sm btn-ghost remove-round" aria-label="Remove round">✕</button>
+  </div>
+{%- endmacro %}
+
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('applications') }}">Applications</a> / {{ 'Edit #' ~ app_row.application_id if app_row else 'New' }}</p>
+<h1>{{ 'Edit application' if app_row else 'Add application' }}</h1>
+
+{% if not jobs %}
+  <div class="flash flash-error">You need at least one job first. <a href="{{ url_for('job_new') }}">Add a job</a>.</div>
+{% endif %}
+{% if errors %}<div class="flash flash-error">Please fix the highlighted fields.</div>{% endif %}
+
+<form method="post" class="card form">
+  <div class="field {{ 'has-error' if errors.get('job_id') }}">
+    <label for="job_id">Job <span class="req">*</span></label>
+    <select id="job_id" name="job_id" required>
+      <option value="">— Select a job —</option>
+      {% for j in jobs %}
+        <option value="{{ j.job_id }}" {{ 'selected' if values.get('job_id')|string == j.job_id|string }}>{{ j.company_name }} — {{ j.job_title }}</option>
+      {% endfor %}
+    </select>
+    {{ field_error(errors, 'job_id') }}
+  </div>
+
+  <div class="form-row">
+    {{ text_input('application_date', 'Application date', values, errors, type='date', required=True) }}
+    <div class="field {{ 'has-error' if errors.get('status') }}">
+      <label for="status">Status <span class="req">*</span></label>
+      <select id="status" name="status">
+        {% for s in STATUSES %}<option value="{{ s }}" {{ 'selected' if values.get('status') == s }}>{{ s }}</option>{% endfor %}
+      </select>
+      {{ field_error(errors, 'status') }}
+    </div>
+  </div>
+
+  <div class="form-row">
+    {{ text_input('resume_version', 'Resume version', values, errors, maxlength=50, placeholder='e.g. v2-data') }}
+    <div class="field checkbox-field">
+      <label><input type="checkbox" name="cover_letter_sent" {{ 'checked' if values.get('cover_letter_sent') in (1, True, 'on') }}> Cover letter sent</label>
+    </div>
+  </div>
+
+  <fieldset class="rounds {{ 'has-error' if errors.get('interview_data') }}">
+    <legend>Interview rounds <span class="hint">(saved in the interview_data JSON column)</span></legend>
+    <div id="rounds">
+      {% for r in rounds %}{{ round_row(r) }}{% endfor %}
+    </div>
+    {{ field_error(errors, 'interview_data') }}
+    <button type="button" class="btn btn-sm" id="add-round">+ Add interview round</button>
+  </fieldset>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Save changes' if app_row else 'Add application' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('application_detail', application_id=app_row.application_id) if app_row else url_for('applications') }}">Cancel</a>
+  </div>
+</form>
+
+<template id="round-template">{{ round_row() }}</template>
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Add / remove interview-round rows without reloading the page.
+  const roundsBox = document.getElementById('rounds');
+  const template = document.getElementById('round-template');
+  document.getElementById('add-round').addEventListener('click', () => {
+    roundsBox.appendChild(template.content.cloneNode(true));
+  });
+  roundsBox.addEventListener('click', (event) => {
+    if (event.target.classList.contains('remove-round')) {
+      event.target.closest('.round-row').remove();
+    }
+  });
+</script>
+{% endblock %}

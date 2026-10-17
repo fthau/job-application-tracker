@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import delete_button, status_badge %}
+{% block title %}Application · {{ app_row.job_title }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('applications') }}">Applications</a> / #{{ app_row.application_id }}</p>
+<div class="page-head">
+  <div>
+    <h1>{{ app_row.job_title }} {{ status_badge(app_row.status) }}</h1>
+    <p class="muted">
+      <a href="{{ url_for('company_detail', company_id=app_row.company_id) }}">{{ app_row.company_name }}</a>
+      · <a href="{{ url_for('job_detail', job_id=app_row.job_id) }}">View job</a>
+    </p>
+  </div>
+  <div class="actions">
+    <a class="btn" href="{{ url_for('application_edit', application_id=app_row.application_id) }}">Edit</a>
+    {{ delete_button(url_for('application_delete', application_id=app_row.application_id),
+         'Delete this application?') }}
+  </div>
+</div>
+
+<section class="card">
+  <dl class="details">
+    <dt>Applied on</dt><dd>{{ app_row.application_date|nice_date }}</dd>
+    <dt>Job type</dt><dd>{{ app_row.job_type }}</dd>
+    <dt>Resume version</dt><dd>{{ app_row.resume_version or '—' }}</dd>
+    <dt>Cover letter sent</dt><dd>{{ 'Yes' if app_row.cover_letter_sent else 'No' }}</dd>
+  </dl>
+</section>
+
+<section class="card">
+  <h2>Interview rounds ({{ app_row.rounds|length }})</h2>
+  {% if app_row.rounds %}
+    <ol class="timeline">
+      {% for r in app_row.rounds %}
+        <li>
+          <div class="timeline-date">{{ r.date|nice_date }}</div>
+          <div>
+            <strong>{{ r.type or 'Interview' }}</strong>{% if r.interviewer %} with {{ r.interviewer }}{% endif %}
+            {% if r.notes %}<p class="small">{{ r.notes }}</p>{% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ol>
+  {% else %}
+    <p class="empty">No interviews recorded yet. <a href="{{ url_for('application_edit', application_id=app_row.application_id) }}">Add a round</a>.</p>
+  {% endif %}
+  <details class="json-peek">
+    <summary>Stored JSON (interview_data)</summary>
+    <pre>{{ app_row.interview_data|tojson(indent=2) if app_row.interview_data else 'NULL' }}</pre>
+  </details>
+</section>
+{% endblock %}
