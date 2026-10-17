@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import text_input, field_error %}
+{% block title %}{{ 'Edit contact' if contact else 'Add contact' }}{% endblock %}
+{% block content %}
+<p class="crumbs"><a href="{{ url_for('contacts') }}">Contacts</a> / {{ 'Edit ' ~ contact.contact_name if contact else 'New' }}</p>
+<h1>{{ 'Edit contact' if contact else 'Add contact' }}</h1>
+
+{% if errors %}<div class="flash flash-error">Please fix the highlighted fields.</div>{% endif %}
+
+<form method="post" class="card form">
+  <div class="form-row">
+    {{ text_input('contact_name', 'Name', values, errors, required=True, maxlength=100) }}
+    {{ text_input('title', 'Job title', values, errors, maxlength=100, placeholder='e.g. Recruiter') }}
+  </div>
+
+  <div class="field {{ 'has-error' if errors.get('company_id') }}">
+    <label for="company_id">Company</label>
+    <select id="company_id" name="company_id">
+      <option value="">— None —</option>
+      {% for c in companies %}
+        <option value="{{ c.company_id }}" {{ 'selected' if values.get('company_id')|string == c.company_id|string }}>{{ c.company_name }}</option>
+      {% endfor %}
+    </select>
+    {{ field_error(errors, 'company_id') }}
+  </div>
+
+  <div class="form-row">
+    {{ text_input('email', 'Email', values, errors, type='email', maxlength=100) }}
+    {{ text_input('phone', 'Phone', values, errors, type='tel', maxlength=20, placeholder='407-555-0100') }}
+  </div>
+
+  {{ text_input('linkedin_url', 'LinkedIn URL', values, errors, type='url', maxlength=200, placeholder='https://www.linkedin.com/in/…') }}
+
+  <div class="field {{ 'has-error' if errors.get('notes') }}">
+    <label for="notes">Notes</label>
+    <textarea id="notes" name="notes" rows="4">{{ values.get('notes') or '' }}</textarea>
+    {{ field_error(errors, 'notes') }}
+  </div>
+
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Save changes' if contact else 'Add contact' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('contact_detail', contact_id=contact.contact_id) if contact else url_for('contacts') }}">Cancel</a>
+  </div>
+</form>
+{% endblock %}
