@@ -1,0 +1,121 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import status_badge %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Dashboard</h1>
+    <p class="muted">Your job search at a glance.</p>
+  </div>
+  <div class="actions">
+    <a class="btn btn-primary" href="{{ url_for('application_new') }}">+ New application</a>
+  </div>
+</div>
+
+<section class="stat-grid">
+  <a class="stat" href="{{ url_for('applications') }}">
+    <span class="stat-label">Applications</span>
+    <span class="stat-value">{{ stats.counts.applications }}</span>
+    <span class="stat-sub">{{ summary.active }} active</span>
+  </a>
+  <a class="stat" href="{{ url_for('applications', status='Offer') }}">
+    <span class="stat-label">Offers</span>
+    <span class="stat-value">{{ summary.offers }}</span>
+    <span class="stat-sub">{{ summary.interview_rate }}% reached interview or offer</span>
+  </a>
+  <a class="stat" href="{{ url_for('jobs') }}">
+    <span class="stat-label">Jobs tracked</span>
+    <span class="stat-value">{{ stats.counts.jobs }}</span>
+    <span class="stat-sub">across {{ stats.counts.companies }} companies</span>
+  </a>
+  <a class="stat" href="{{ url_for('contacts') }}">
+    <span class="stat-label">Contacts</span>
+    <span class="stat-value">{{ stats.counts.contacts }}</span>
+    <span class="stat-sub">people in your network</span>
+  </a>
+</section>
+
+<div class="grid-2">
+  <section class="card">
+    <h2>Applications by status</h2>
+    {% set total = stats.counts.applications or 1 %}
+    <ul class="bar-list">
+      {% for s in STATUSES %}
+        {% set n = stats.by_status.get(s, 0) %}
+        <li>
+          <a href="{{ url_for('applications', status=s) }}" class="bar-label">{{ s }}</a>
+          <span class="bar-track"><span class="bar-fill bar-{{ s|lower }}" style="width: {{ (n / total * 100)|round(1) }}%"></span></span>
+          <span class="bar-count">{{ n }}</span>
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>Upcoming interviews</h2>
+    {% if stats.upcoming %}
+      <ul class="plain-list">
+        {% for i in stats.upcoming %}
+          <li>
+            <div class="date-pill">{{ i.round_date.strftime('%b') }}<strong>{{ i.round_date.day }}</strong></div>
+            <div>
+              <a href="{{ url_for('application_detail', application_id=i.application_id) }}"><strong>{{ i.job_title }}</strong></a>
+              <span class="muted">at {{ i.company_name }}</span><br>
+              <span class="small">{{ i.round_type or 'Interview' }}{% if i.interviewer %} with {{ i.interviewer }}{% endif %}</span>
+            </div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">No interviews scheduled. Add interview rounds when editing an application.</p>
+    {% endif %}
+  </section>
+</div>
+
+<div class="grid-2">
+  <section class="card">
+    <div class="card-head">
+      <h2>Recent applications</h2>
+      <a href="{{ url_for('applications') }}" class="small">View all →</a>
+    </div>
+    {% if stats.recent %}
+    <table class="table">
+      <thead><tr><th>Job</th><th>Company</th><th>Applied</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in stats.recent %}
+        <tr>
+          <td><a href="{{ url_for('application_detail', application_id=a.application_id) }}">{{ a.job_title }}</a></td>
+          <td>{{ a.company_name }}</td>
+          <td class="nowrap">{{ a.application_date|nice_date }}</td>
+          <td>{{ status_badge(a.status) }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p class="empty">No applications yet.</p>
+    {% endif %}
+  </section>
+
+  <section class="card">
+    <div class="card-head">
+      <h2>Most requested skills</h2>
+      <a href="{{ url_for('job_match') }}" class="small">Try Job Match →</a>
+    </div>
+    {% if stats.top_skills %}
+      <ul class="bar-list">
+        {% set top = stats.top_skills[0].job_count %}
+        {% for s in stats.top_skills %}
+          <li>
+            <span class="bar-label">{{ s.skill }}</span>
+            <span class="bar-track"><span class="bar-fill" style="width: {{ (s.job_count / top * 100)|round(1) }}%"></span></span>
+            <span class="bar-count">{{ s.job_count }}</span>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="empty">Add skills to your jobs to see them here.</p>
+    {% endif %}
+  </section>
+</div>
+{% endblock %}
