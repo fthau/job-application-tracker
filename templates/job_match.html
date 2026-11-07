@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+{% from '_macros.html' import skill_chips %}
+{% block title %}Job Match{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <h1>Job Match</h1>
+    <p class="muted">Enter your skills and see every job ranked by how many of its required skills you have.</p>
+  </div>
+</div>
+
+<form class="card form" method="get" id="match-form">
+  <div class="field">
+    <label for="skills">Your skills</label>
+    <input type="text" id="skills" name="skills" value="{{ raw }}" placeholder="Python, SQL, Flask" autofocus>
+    <p class="hint">Separate skills with commas. Matching ignores upper/lower case.</p>
+  </div>
+  {% if all_skills %}
+  <div class="skill-picker">
+    <span class="small muted">Click to add:</span>
+    {% for s in all_skills %}
+      <button type="button" class="chip chip-button" data-skill="{{ s.skill }}">{{ s.skill }}</button>
+    {% endfor %}
+  </div>
+  {% endif %}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Find matching jobs</button>
+    <label class="small"><input type="checkbox" name="show_all" value="1" {{ 'checked' if show_all }}> Include 0% matches</label>
+    {% if raw %}<a class="btn btn-ghost" href="{{ url_for('job_match') }}">Reset</a>{% endif %}
+  </div>
+</form>
+
+{% if user_skills %}
+  <section class="match-summary">
+    <strong>Your skills:</strong> {{ user_skills|join(', ') }}
+    <span class="muted">· {{ results|length }} matching job{{ '' if results|length == 1 else 's' }}</span>
+  </section>
+
+  {% if results %}
+  <ol class="match-list">
+    {% for r in results %}
+      {% set level = 'high' if r.percent >= 75 else ('mid' if r.percent >= 50 else 'low') %}
+      <li class="card match-card">
+        <div class="match-rank">{{ loop.index }}</div>
+        <div class="match-body">
+          <div class="match-title">
+            <a href="{{ url_for('job_detail', job_id=r.job_id) }}"><strong>{{ r.job_title }}</strong></a>
+            <span class="muted">at {{ r.company_name }}</span>
+            {% if r.application_count %}<span class="badge badge-applied">Applied</span>{% endif %}
+          </div>
+          <div class="small muted">{{ r.job_type }} · {{ r|salary_range }}</div>
+          <div class="match-skills">
+            {% if r.matched %}<div><span class="small">Have:</span> {{ skill_chips(r.matched, 'chip-have') }}</div>{% endif %}
+            {% if r.missing %}<div><span class="small">Missing:</span> {{ skill_chips(r.missing, 'chip-missing') }}</div>{% endif %}
+          </div>
+        </div>
+        <div class="match-score match-{{ level }}">
+          <span class="match-pct">{{ r.percent }}%</span>
+          <span class="small">{{ r.matched_count }}/{{ r.required_count }} skills</span>
+          <span class="meter"><span style="width: {{ r.percent }}%"></span></span>
+        </div>
+      </li>
+    {% endfor %}
+  </ol>
+  {% else %}
+    <p class="card empty">No jobs match those skills yet. Try adding more skills or tick “Include 0% matches”.</p>
+  {% endif %}
+{% elif raw %}
+  <p class="card empty">Please enter at least one skill.</p>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+  // Clicking a skill chip appends it to the skills box (if not already there).
+  const input = document.getElementById('skills');
+  document.querySelectorAll('.chip-button').forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const current = input.value.split(',').map((s) => s.trim()).filter(Boolean);
+      const skill = chip.dataset.skill;
+      if (!current.some((s) => s.toLowerCase() === skill.toLowerCase())) {
+        current.push(skill);
+      }
+      input.value = current.join(', ');
+      input.focus();
+    });
+  });
+</script>
+{% endblock %}
