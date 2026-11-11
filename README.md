@@ -16,7 +16,7 @@ A full-stack web app for tracking job applications, built for **COP4751 Advanced
 - **Frontend:** HTML (Jinja templates) + CSS
 - **Extra:** Job Match, which ranks jobs by how many of their required skills you have
 
-> 🎥 **Demo video:** [`demo.mp4`](demo.mp4) *(replace with future video file name)*
+> 🎥 **Demo video:** [`demo.mp4`](demo.mp4) *(download the file)*
 
 ---
 
